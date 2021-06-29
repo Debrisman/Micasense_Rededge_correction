@@ -17,7 +17,7 @@
 ##                library(spatstat)
 ##                configure_exiftool("YOUR-PATH-TO-exiftool.exe"/exiftool.exe")
 
-RededgeM_processing_dp <- function(dir_CRP, dir_images, CRP_refl = c(CRP_Blue, CRP_Green, CRP_Red, CRP_NIR, CRP_Rededge), metadata_trsf = T) {
+RededgeM_processing_DP <- function(dir_CRP, dir_images, CRP_refl = c(CRP_Blue, CRP_Green, CRP_Red, CRP_NIR, CRP_Rededge), metadata_trsf = T) {
   
 #####@___Libraries___@#####
 library(doParallel) 
