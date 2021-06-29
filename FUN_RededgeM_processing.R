@@ -149,7 +149,7 @@ for (i in 1:length(image_list)) {
   setTxtProgressBar(pb, i)
 }
 file.remove(list.files(path = dir_ref, pattern = "_original", full.names = T)) # optional: remove original file copy
-  print("Metadata transfered. Process complete")
+  print("Metadata transferred. Process complete")
 } else {
   print("Reflectance images saved on hard disk. Process complete")
 }
