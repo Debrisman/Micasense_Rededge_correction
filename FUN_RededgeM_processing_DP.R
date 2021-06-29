@@ -2,19 +2,22 @@
 ##_FUN_##____Rededge image processing___________#####
 ##########--------------------------------------#####>
 ## AUTHOR      : Giacomo Crucil
-## VERSION     : 20210504
+## VERSION     : 20210629
 ## DESCRIPTION : Application of the radiometric calibration model and image correction: from raw Rededge images to calibrated reflectance
 ##               This script is to be used with the "Rededge-M" camera model with firmware from 2.10 version
 ## INPUT       : - "dir_CPR" = /text/ path to directory with CRP pictures in .tif format
 ##               - "dir_images" = /text/ path to directory with pictures to be converted to reflectance in .tif format
+##               - "CRP_refl" = /numeric/ vector containing the 5 calibrated reflectance values of the CRP (must be in order
+##                  Blue, Green, Red, NIR, Rededge)
 ## OUTPUT      : /_r.tif/ processed images saved in subfolder "/reflectance"
-## REQUIREMENTS : library(exifr)
+## REQUIREMENTS : library(doParallel)
+##                library(exifr)
 ##                library(raster)
 ##                library(rgdal)
 ##                library(spatstat)
 ##                configure_exiftool("YOUR-PATH-TO-exiftool.exe"/exiftool.exe")
 
-RededgeM_processing_dp <- function(dir_CRP, dir_images, metadata_trsf = T) {
+RededgeM_processing_dp <- function(dir_CRP, dir_images, CRP_refl = c(CRP_Blue, CRP_Green, CRP_Red, CRP_NIR, CRP_Rededge), metadata_trsf = T) {
   
 #####@___Libraries___@#####
 library(doParallel) 
@@ -84,13 +87,7 @@ rededge_corr <- function(dir) {
 ##### Work-flow from image raw-DN to reflectance #####
 #####@---------------@#############################################################################################>
 
-### Rededge-M CRP serial: RP04-1808074-SC
-CRP_Blue <- 0.4927
-CRP_Green <- 0.4930
-CRP_Red <- 0.4913
-CRP_NIR <- 0.4874
-CRP_Rededge <- 0.4901
-CRP_reflectance <- c(CRP_Blue, CRP_Green, CRP_Red, CRP_NIR, CRP_Rededge)
+CRP_reflectance <- CRP_refl
 
 #####___1) CRP data extraction #####
 ###################################################################################################################>

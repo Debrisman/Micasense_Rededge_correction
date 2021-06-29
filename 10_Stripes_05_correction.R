@@ -1,11 +1,12 @@
 #####@___Libraries___@#####
 # library(doSNOW)
-library(exifr)
-configure_exiftool("D:/exiftool.exe") # Set location of exiftool.exe (if new version)
+#
 library(exifr)
 library(raster)
 library(suncalc)
 ######---------------#####>
+
+ANIF_corr <- function(params_dir, image_dir, Input_model) {
 
 # ### parallel comp setup
 # no_cores <- detectCores() - 1  
@@ -16,16 +17,9 @@ library(suncalc)
 ##### Pix4D calibrated parameters #####
 #####@---------------@#############################################################################################>
 
-#####!!! USER INPUT data from P4D /params folder
-params_dir <- "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_params" # params folder
-#####!!! USER INPUT reflectance images folder
-dir <- "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_reflectance" # dir of reflectance images
-#####!!! USER INPUT model calibrated from previous script
-Input_model <- readRDS("E:/Data/10_Stripes_problem/Angles_model/PolyModels_ZenSenZen.rds")
-
 # automatic input data selection
 Cam_pos_file <- list.files(params_dir, pattern = "calibrated_external_camera_parameters_wgs84.txt", full.names = TRUE)
-image_list <- list.files(dir, pattern = ".tif")
+image_list <- list.files(image_dir, pattern = ".tif")
 F_file <-  list.files(params_dir, pattern = "pix4d_calibrated_internal_camera_parameters.cam", full.names = TRUE)
 F_par <- readLines(F_file)[c(3, 18, 33, 48, 63)] # extract calibrated Focal length
 
@@ -38,19 +32,11 @@ ucvc <- matrix(c(1280/2, 960/2), ncol = 2, byrow = TRUE)
 colnames(ucvc) <- c("uc", "vc")
 ### Camera positions and attitute (calibrated from Pix4D)
 Cam_pos <- read.table(Cam_pos_file, header = T)
-print(paste0(cat("!!!WARNING!!! Check if image name in 'params' is consistent with images in your 'dir' folder and correct accordingly\n"), 
-             "In params folder = '", head(Cam_pos)[1, 1], "' // in dir folder =  '", image_list[1], "'"))
 
-#####!!! USER INPUT imageName modification
-# Cam_pos$imageName <- paste0(substr(Cam_pos$imageName, 1, 20), substr(Cam_pos$imageName, 26, 29)) # for Sicy
-# Cam_pos$imageName <- paste0(substr(Cam_pos$imageName, 1, 10), "_r", substr(Cam_pos$imageName, 11, 14)) # for Thorembais
-# Cam_pos$imageName <- paste0(substr(Cam_pos$imageName, 1, 18), "_r", substr(Cam_pos$imageName, 19, 22)) # Geeste_1, PetitSeumoy
-# Cam_pos$imageName[1:3840] <- paste0("0000SET_", Cam_pos$imageName[1:3840])  # Ernage 2
-# Cam_pos$imageName[3841:5635] <- paste0("0001SET_", Cam_pos$imageName[3841:5635])  # Ernage 2
-# Cam_pos$imageName <- paste0(substr(Cam_pos$imageName, 1, 18), "_r", substr(Cam_pos$imageName, 19, 22)) # Ernage 2
-Cam_pos$imageName <- paste0(substr(Cam_pos$imageName, 1, 10), "_r", substr(Cam_pos$imageName, 11, 14)) # for Gembloux 20210401/0423, Villeroux 20190827F3
-#####!!!
+### Change image names in Cam_pos file to include _r suffix
+Cam_pos$imageName <- gsub(pattern = ".tif", replacement = "_r.tif", Cam_pos$imageName)
 
+### SPDF
 Cam_pos <- SpatialPointsDataFrame(coords = coordinates(Cam_pos[, c("longitude", "latitude")]), data = Cam_pos,
                                   proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
 Cam_pos$Fp <- rep(Fp, nrow(Cam_pos)/5)
@@ -69,9 +55,9 @@ Cam_pos$vCal <- Cam_pos$vc + Cam_pos$vcvh # y pixel position of calibrated senso
 #####@---------------@#############################################################################################>
 
 ### all images for post-processing
-image_list <- list.files(dir, recursive = TRUE, pattern = ".tif")
+image_list <- list.files(image_dir, recursive = TRUE, pattern = ".tif")
 image_list <- image_list[match(Cam_pos$imageName, image_list)]
-image_list_full <- paste0(dir, "/", image_list)
+image_list_full <- paste0(image_dir, "/", image_list)
 head(image_list_full)[1]
 
 #####@---------------@#############################################################################################>
@@ -92,10 +78,9 @@ fun_sen_az180 <- function(sen_az360) {
   ifelse(sen_az360 >= pi, 2*pi - sen_az360, sen_az360)}
 ### fun for alpha angle calculation (angle between calibrated sensor zenith position and pixels)
 alpha <- function (u_coord, v_coord, uc_dist, vc_dist, uCal_dist, vCal_dist) {
-  f <- 5 # test select F for cam
-  TN  <- Fp[f]/cos(Cam_pos$Omega[img_num]*pi/180)
+  TN  <- Fp[rig]/cos(Cam_pos$Omega[img_num]*pi/180)
   CP <- sqrt(abs(uc_dist)^2 + abs(vc_dist)^2)
-  TP <- sqrt(Fp[f]^2 + CP^2)
+  TP <- sqrt(Fp[rig]^2 + CP^2)
   NP <- sqrt(abs(uCal_dist)^2 + abs(vCal_dist)^2)
   cos.alpha <- (TP^2 + TN^2 - NP^2)/(2*TP*TN)
   alpha <- acos(cos.alpha)}
@@ -112,7 +97,7 @@ fun_sen_az180_rel <- function(sen_az360_rel) {
 ##### Start of correction cycle #####
 #####@---------------@#############################################################################################>
 
-dir.create(paste0(dir, "/corr"))
+dir.create(paste0(image_dir, "/corr"))
 pb <- txtProgressBar(min = 0, max = length(image_list_full), style = 3)
 count <- 1
 for (img_num in 1:length(image_list_full)) { # start of sampling cycle
@@ -204,7 +189,7 @@ names(Angles_map) <- c("Rel_az", "Rel_zen", "Sensor_zen", "Sun_zen")
 i_fit <- rig + 1
 ANIF_pred <- raster::predict(Angles_map, Input_model[[i_fit]])
 image_corr <- image/ANIF_pred
-writeRaster(image_corr, filename = paste0(dir, "/corr/", gsub(pattern = "_r.tif", replacement = "_corr.tif", basename(image_list_full[img_num]))),
+writeRaster(image_corr, filename = paste0(image_dir, "/corr/", gsub(pattern = "_r.tif", replacement = "_corr.tif", basename(image_list_full[img_num]))),
             format = "GTiff")
 
 #####@---------------@#############################################################################################>
@@ -219,7 +204,7 @@ count <- count + 1
 ##### Metadata transfer #####
 #####@---------------@#############################################################################################>
 
-image_corr_list <- paste0(dir, "/corr/", image_list)
+image_corr_list <- paste0(image_dir, "/corr/", image_list)
 image_corr_list <- gsub(pattern = "_r.tif", replacement = "_corr.tif", image_corr_list)
 
 pb <- txtProgressBar(min = 0, max = length(image_corr_list), style = 3)
@@ -228,5 +213,7 @@ for (i in 1:length(image_corr_list)) {
                 quiet = T)
   setTxtProgressBar(pb, i)
 }
-file.remove(list.files(path = paste0(dir, "/corr"), pattern = "_original", full.names = T)) # optional: remove original file copy
+file.remove(list.files(path = paste0(image_dir, "/corr"), pattern = "_original", full.names = T)) # optional: remove original file copy
 print("Metadata transfered. Process complete")
+
+} # end of function
