@@ -8,6 +8,10 @@ library(suncalc)
 
 ANIF_corr <- function(params_dir, image_dir, Input_model) {
 
+params_dir = "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_params"
+image_dir = "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_reflectance"
+readRDS("E:/Data/10_Stripes_problem/Angles_model/PolyModels_ZenSenZen.rds")
+  
 # ### parallel comp setup
 # no_cores <- detectCores() - 1  
 # cl <- makeCluster(no_cores, type = "PSOCK")  
@@ -58,7 +62,6 @@ Cam_pos$vCal <- Cam_pos$vc + Cam_pos$vcvh # y pixel position of calibrated senso
 image_list <- list.files(image_dir, recursive = TRUE, pattern = ".tif")
 image_list <- image_list[match(Cam_pos$imageName, image_list)]
 image_list_full <- paste0(image_dir, "/", image_list)
-head(image_list_full)[1]
 
 #####@---------------@#############################################################################################>
 ##### Functions for angles #####
@@ -78,9 +81,9 @@ fun_sen_az180 <- function(sen_az360) {
   ifelse(sen_az360 >= pi, 2*pi - sen_az360, sen_az360)}
 ### fun for alpha angle calculation (angle between calibrated sensor zenith position and pixels)
 alpha <- function (u_coord, v_coord, uc_dist, vc_dist, uCal_dist, vCal_dist) {
-  TN  <- Fp[rig]/cos(Cam_pos$Omega[img_num]*pi/180)
+  TN  <- Fp[rig + 1]/cos(Cam_pos$Omega[img_num]*pi/180)
   CP <- sqrt(abs(uc_dist)^2 + abs(vc_dist)^2)
-  TP <- sqrt(Fp[rig]^2 + CP^2)
+  TP <- sqrt(Fp[rig + 1]^2 + CP^2)
   NP <- sqrt(abs(uCal_dist)^2 + abs(vCal_dist)^2)
   cos.alpha <- (TP^2 + TN^2 - NP^2)/(2*TP*TN)
   alpha <- acos(cos.alpha)}
