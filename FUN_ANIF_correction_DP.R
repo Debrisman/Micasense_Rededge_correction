@@ -6,7 +6,7 @@ library(raster)
 library(suncalc)
 ######---------------#####>
 
-ANIF_corr_DP <- function(params_dir, image_dir, Input_model) {
+ANIF_correction_DP <- function(params_dir, image_dir, Input_model) {
 
 ### parallel comp setup
 no_cores <- detectCores() - 1  
