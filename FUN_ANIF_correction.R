@@ -6,7 +6,7 @@ library(raster)
 library(suncalc)
 ######---------------#####>
 
-ANIF_corr <- function(params_dir, image_dir, Input_model) {
+ANIF_correction <- function(params_dir, image_dir, Input_model) {
 
 params_dir = "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_params"
 image_dir = "G:/Projects/10_Stripes_problem/20210423_Gembloux/F3_reflectance"
