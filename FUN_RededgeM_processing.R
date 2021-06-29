@@ -141,7 +141,7 @@ if(metadata_trsf == T) {
 ### Copy metadata from original to reflectance pictures
 image_ref_list <- list.files(dir_ref, pattern = "_r.tif", full.names = TRUE)
 
-print("Reflectance images saved on hard disk. Now transfering metadata...")
+print("Reflectance images saved on hard disk. Now transferring metadata...")
 pb <- txtProgressBar(min = 0, max = length(image_list), style = 3)
 for (i in 1:length(image_list)) {
   exiftool_call(args = c("-all=", "-TagsFromFile", image_list[i], "-all:all", "-xmp", image_ref_list[i], "-q", '-q'),
