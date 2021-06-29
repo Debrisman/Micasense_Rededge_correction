@@ -19,8 +19,6 @@ RededgeM_processing_dp <- function(dir_CRP, dir_images, metadata_trsf = T) {
 #####@___Libraries___@#####
 library(doParallel) 
 library(exifr)
-# configure_exiftool("C:/Users/crucil/Documents/exiftool/exiftool.exe") # Set location of exiftool.exe (if new version)
-# configure_exiftool("D:/exiftool.exe") # Set location of exiftool.exe (if new version)
 library(raster)
 library(rgdal)
 library(spatstat)
