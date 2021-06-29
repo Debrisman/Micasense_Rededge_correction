@@ -29,7 +29,7 @@ library(spatstat)
 
 ### parallel comp setup
 no_cores <- detectCores() - 1  
-cl <- makeCluster(no_cores, type = "FORK")  
+cl <- makeCluster(no_cores, type = "PSOCK")  
 registerDoParallel(cl) 
 
 #########------------------------------------------------#####>
